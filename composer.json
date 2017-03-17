@@ -1,0 +1,19 @@
+{
+    "name": "danpai88/tools",
+    "description": "in order to study composer",
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "license": "mit",
+    "authors": [
+        {
+            "name": "chenyan",
+            "email": "2545205707@qq.com"
+        }
+    ],
+    "autoload":{
+        "psr-4":{
+            "danpai\\":"src/"
+        }
+    }
+}
