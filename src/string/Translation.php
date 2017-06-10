@@ -5,8 +5,8 @@ use danpai\net\Http;
 
 class Translation
 {
-    const BAIDU_API = '';
-    const BAIDU_KEY = '';
+    const BAIDU_API = BAIDU_API;
+    const BAIDU_KEY = BAIDU_KEY;
     const BAIDU_URL = 'http://api.fanyi.baidu.com/api/trans/vip/translate';
 
     const YOUDAO_API = '';
