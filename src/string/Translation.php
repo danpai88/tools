@@ -27,22 +27,22 @@ class Translation
 
     protected static function run($sourceText, $toLang = 'en', $fromLang = 'auto')
     {
-        list($imgs, $sourceText) = static::deal_data($sourceText);
-        $result = static::baidu($sourceText, $fromLang, $toLang);
+        list($imgs, $processedText) = static::deal_data($sourceText);
+
+        $result = static::baidu($processedText, $fromLang, $toLang);
 
         //百度查询失败，则使用有道再查询一次
         if(!$result){
-            $result = static::youdao($sourceText, $fromLang, $toLang);
+            $result = static::youdao($processedText, $fromLang, $toLang);
         }
 
         if($result){
             if($imgs && !empty($imgs[0])){
-                foreach ($imgs[0] as $key => $match) {
-                    $result = str_replace('@'.$key.'@', $match, $result);
+                foreach ($imgs[0] as $key => $img) {
+                    $result = str_replace('@'.$key.'@', $img, $result);
                 }
             }
         }
-
         return $result;
     }
 
@@ -66,12 +66,16 @@ class Translation
         $param['sign'] = md5($param['appid'].$param['q'].$param['salt'].static::BAIDU_KEY);
         $response = Http::curlPost(static::BAIDU_URL, $param);
         $json = json_decode($response, true);
-
         if(!$json || (!empty($json['error_code']) && $json['error_code'] != 52000) ){
             static::markLogs($response, 'baidu');
             return false;
         }
-        return $json['trans_result'][0]['dst'];
+
+        $tmp = '';
+        foreach ($json['trans_result'] as $dst) {
+            $tmp .= $dst['dst'];
+        }
+        return $tmp;
     }
 
     /**
@@ -104,13 +108,18 @@ class Translation
 
     protected static function markLogs($msg = '', $type = '')
     {
-        $file = dirname(__DIR__).DIRECTORY_SEPARATOR.'Logs'.DIRECTORY_SEPARATOR.date('Y-m-d').'.txt';
+        $logDir = dirname(__DIR__).DIRECTORY_SEPARATOR.'logs';
+        if(!file_exists($logDir)){
+            mkdir($logDir, 777, true);
+        }
+        $file = $logDir.DIRECTORY_SEPARATOR.date('Y-m-d').'.txt';
         $msg = date('Y-m-d H:i:s').' [translation notice] '.$type.' '.$msg."\n\r";
         file_put_contents($file, $msg, FILE_APPEND);
     }
 
     protected static function deal_data($string)
     {
+        $string = trim(preg_replace('/<p>\s*<\/p>/', '', $string));
         $p = '/<img(.*?)>/';
         preg_match_all($p, $string, $matchs);
         if($matchs && !empty($matchs[0])){
